@@ -34,3 +34,4 @@ while 1:
         if current_time-first_recorded_time>=5*60:
             print(f"cookies/second : {float(driver.execute_script("return document.getElementById('cookiesPerSecond').innerText;").split(":")[1])}")
             break
+driver.quit()
