@@ -1,0 +1,36 @@
+import time
+import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+edge_options=webdriver.EdgeOptions()
+edge_options.add_experimental_option("detach",True)
+driver=webdriver.Edge(edge_options)
+
+ZILLOW_URL="https://appbrewery.github.io/Zillow-Clone/"
+FORM_URL="https://docs.google.com/forms/d/e/1FAIpQLSfcqO6SS_h_ZvJubOli4vUiI9TjRwpXrWjJGa7yZ2glLUNQSA/viewform?usp=publish-editor"
+
+r=requests.get(ZILLOW_URL)
+r.raise_for_status()
+
+soup=BeautifulSoup(r.text,"html.parser")
+all_listings=soup.find_all(name="li",class_="ListItem-c11n-8-84-3-StyledListCardWrapper")
+links=[]
+prices=[]
+addresses=[]
+for listing in all_listings:
+    links.append(listing.find(name="a",class_="property-card-link").get("href"))
+    prices.append(listing.find(name="span",class_="PropertyCardWrapper__StyledPriceLine").text.strip("+/mo"))
+    addresses.append(listing.find(name="address").text.strip("\n                                  ").replace(" | ",""))
+
+for i in range(len(all_listings)):
+    driver.get(FORM_URL)
+    time.sleep(1)
+    driver.find_element(By.XPATH,'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div/div[1]/input').send_keys(addresses[i])
+    driver.find_element(By.XPATH,'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div/div[1]/input').send_keys(prices[i])
+    driver.find_element(By.XPATH,'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div[1]/div/div[1]/input').send_keys(links[i])
+    driver.find_element(By.XPATH,'//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span').click()
+    time.sleep(5)
+
+driver.quit()
